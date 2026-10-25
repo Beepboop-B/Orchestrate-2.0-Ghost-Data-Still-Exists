@@ -31,13 +31,30 @@ Your solution must:
 - Generate one prediction row for every request in `dataset/deletion_requests.csv`
 - Write the final predictions to `output.csv` in the repository root
 
-Run the starter Python entry point with:
+The solution uses Python's standard library only and supports Python 3.10 or
+newer. From the repository root, generate the full output with:
 
-```bash
-python3 code/main.py
+```powershell
+python code/main.py
 ```
 
-The blank template at `dataset/output.csv` is provided as a reference. Your final generated file for submission must be the root-level `output.csv`.
+This writes and validates the 518-row `output.csv` at the repository root. To
+generate a candidate at another path without replacing the root output, use
+`python code/main.py --output .accuracy-baseline/candidate_output.csv`. To run
+the 32 public requests, use `python code/main.py --samples --output
+code/evaluation/sample_predictions.csv`.
+
+Run tests and evaluate the public samples with:
+
+```powershell
+python -m unittest discover -s code/tests -v
+python code/evaluation/main.py
+```
+
+The evaluator compares predictions with `dataset/sample_output.csv`; the
+production predictor does not read that file. The blank template at
+`dataset/output.csv` is provided as a reference. Final submissions use the
+root-level `output.csv`.
 
 
 ## Dataset
@@ -155,3 +172,28 @@ Before submitting, confirm that:
 - `code.zip` includes your runnable code, `README.md`, `code/evaluation/evaluation_report.md`, and `code/evaluation/usage_report.md`;
 - `log.txt` follows the `AGENTS.md` turn format and is uploaded to the `chat_transcript` slot; and
 - no API keys, credentials, real personal data, or sensitive configuration values are included.
+
+## Account resource correlation
+
+Primary-profile account deletion activity can nominate an account resource
+when its worker result agrees with the request status (`COMPLETE` → `SUCCESS`,
+`NOT_STARTED` → `FAILED`, `PARTIALLY_COMPLETE` → `PARTIAL` or `SUCCESS`). The
+event must occur 0.70–1.30 hours before `reported_at`, or no more than 15
+minutes after it, and between `requested_at` and `audit_at`. Exact current or
+historical email/user-ID links, plus historical phone/hash identifiers from
+`user_audit_log.csv`, can tie an account to another request and exclude that
+account from the case's candidate set. Name-only, current phone/hash, trace,
+and time-only links are not used for this tie-break. Unique event claims
+propagate one-to-one across the complete request universe; ambiguous
+candidates are left unassigned.
+
+A legacy fallback is also retained: one account-service `DELETE_RECORD` event
+must be within 90 minutes of `reported_at`, at or after `requested_at`, and
+overlap exactly one request window across the full request universe. The
+90-minute tolerance is a heuristic, not a challenge-contract constant.
+
+Activity only nominates a resource. The engine emits an account verification
+only when independent evidence reconstructs its state. The evidence manifest
+`captured_at` and record `observed_at` must both be at or before `audit_at`.
+An identity-bearing account link observed before `requested_at` cannot attach
+that old resource to a later request.

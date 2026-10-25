@@ -1,0 +1,34 @@
+.aider*
+
+# Local secrets and settings
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Python environments, bytecode, caches, and test output
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local agent state and experiment outputs
+.accuracy-baseline/
+.agents/
+agent-trace/
+agent-trace.zip
+diagnostics/*.csv
+diagnostics/pipeline_diagnostic.md
+skills-lock.json
+
+# OS metadata
+.DS_Store
+Thumbs.db
